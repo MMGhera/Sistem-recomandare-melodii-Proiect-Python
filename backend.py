@@ -7,7 +7,7 @@ import json
 
 app = FastAPI(title="Local Music Preferences Backend")
 
-# ---- FILES ----
+# ---- FILES ----; replace later????
 DATA_FILE = Path("users.json")
 SONGS_FILE = Path("songs.json")
 DATA_LOCK = Lock()  # thread-safe writes
@@ -17,7 +17,7 @@ if not DATA_FILE.exists():
     DATA_FILE.write_text("{}")  # empty JSON
 
 if not SONGS_FILE.exists():
-    # Example song list, you can expand this
+    # Example song list; replace with db
     SONGS_FILE.write_text(json.dumps([
         "Metallica - Enter Sandman",
         "Metallica - One",
