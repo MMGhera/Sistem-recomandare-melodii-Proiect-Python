@@ -1,11 +1,20 @@
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 from threading import Lock
 from typing import List
 import json
 
 app = FastAPI(title="Local Music Preferences Backend")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # Allow your Vite frontend
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ---- FILES ----; replace later????
 DATA_FILE = Path("users.json")
@@ -88,3 +97,7 @@ def autocomplete(q: str = Query(..., min_length=1)):
 def root():
     return {"message": "Backend is running"}
 
+if __name__ == "__main__":
+    import uvicorn
+    # Run the server on localhost:8000
+    uvicorn.run(app, host="127.0.0.1", port=8000)
