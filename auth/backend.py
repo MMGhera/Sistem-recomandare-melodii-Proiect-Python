@@ -91,7 +91,7 @@ def autocomplete(q: str = Query(..., min_length=1)):
     """
     query_lower = q.lower()
     results = [song for song in ALL_SONGS if query_lower in song.lower()]
-    return results[:10]  # return top 10 matches only
+    return results[:10]  # return only top 10 matches
 
 @app.get("/")
 def root():
