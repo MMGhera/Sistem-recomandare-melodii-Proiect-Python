@@ -56,7 +56,7 @@ export default function Login({ onLoginSuccess }) {
             style={{ padding: '8px', width: '100%' }}
           />
         </div>
-        <button type="submit">
+        <button type="submit"> 
           Sign In
         </button>
       </form>
