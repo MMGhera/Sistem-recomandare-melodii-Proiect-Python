@@ -1,0 +1,5 @@
+torch
+tqdm
+scikit-learn
+librosa
+tensorboard
