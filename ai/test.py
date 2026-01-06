@@ -5,8 +5,6 @@ import torch
 from dataset import MelConfig, generate_melspectrogram
 from model import INSTRUMENT_MAP, MusiCNN
 
-instrument_list = list(INSTRUMENT_MAP.keys())
-
 if torch.cuda.is_available():
     device = torch.device("cuda")
 elif torch.backends.mps.is_available():
@@ -16,13 +14,14 @@ else:
 
 def load_model(model_file):
     state = torch.load(model_file, map_location=device, weights_only=False)
+    instrument_list = state["instrument_list"]
     mel_config: MelConfig = state["mel_config"]
     frames_per_window = state["frames_per_window"]
     optimal_thresholds = state["optimal_thresholds"]
     model = MusiCNN(num_classes=len(INSTRUMENT_MAP), num_mels=mel_config.n_mels)
     model.load_state_dict(state["model"])
     model.to(device)
-    return model, mel_config, frames_per_window, optimal_thresholds
+    return model, instrument_list, mel_config, frames_per_window, optimal_thresholds
 
 def post_process_thresholds(thresholds):
     thresholds["drums"] *= 0.8
@@ -74,7 +73,7 @@ if __name__ == '__main__':
     audio_file = sys.argv[1]
     model_file = sys.argv[2]
 
-    model, mel_config, frames_per_window, optimal_thresholds = load_model(model_file)
+    model, instrument_list, mel_config, frames_per_window, optimal_thresholds = load_model(model_file)
     audio, audio_sample_rate = librosa.load(audio_file, sr=None)
 
     song_prediction = analyze(model, mel_config, frames_per_window, audio, audio_sample_rate)

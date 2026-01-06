@@ -191,6 +191,7 @@ def train(model, train_loader, val_loader, epochs, optimizer, criterion,
                 best_map = map_score
                 os.makedirs(checkpoint_dir, exist_ok=True)
                 torch.save({
+                    "instrument_list": instrument_list,
                     "mel_config": MEL_CONFIG,
                     "frames_per_window": FRAMES_PER_WINDOW,
                     "model": model.state_dict(),
@@ -200,6 +201,7 @@ def train(model, train_loader, val_loader, epochs, optimizer, criterion,
         os.makedirs(checkpoint_dir, exist_ok=True)
         torch.save({
             "epoch": epoch,
+            "instrument_list": instrument_list,
             "mel_config": MEL_CONFIG,
             "frames_per_window": FRAMES_PER_WINDOW,
             "model": model.state_dict(),
@@ -280,8 +282,7 @@ def main():
     val_subset = Subset(val_dataset, val_indices)
 
     print("Calculating sampler weights...")
-    # NOTE: get_weights_from_dataset might need adjustment if it iterates items directly
-    # Assuming standard implementation iterates dataset.items:
+
     train_weights = get_weights_from_dataset(train_dataset)[train_indices]
 
     train_sampler = WeightedRandomSampler(
@@ -344,6 +345,7 @@ def main():
     optimal_thresholds = find_optimal_thresholds(model, val_loader, device, instrument_list)
 
     torch.save({
+        "instrument_list": instrument_list,
         "mel_config": MEL_CONFIG,
         "frames_per_window": FRAMES_PER_WINDOW,
         "optimal_thresholds": optimal_thresholds,
