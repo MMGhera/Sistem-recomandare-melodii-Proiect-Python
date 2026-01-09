@@ -530,7 +530,9 @@ import librosa
 import ai.dataset
 # Îi spunem lui Python: "Când cineva caută 'dataset', dă-i 'ai.dataset'"
 sys.modules['dataset'] = ai.dataset
-#
+
+import requests
+import uuid # Pentru nume unice la fișiere temporare
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -791,6 +793,119 @@ def recommend(username: str, db: Session = Depends(get_db)):
 
     scores.sort(key=lambda x: x[1], reverse=True)
     return {"recommendations": [s[0] for s in scores[:5]]}
+
+
+# --- ENDPOINT NOU: ANALIZĂ EXTERNĂ LIVE ---
+@app.get("/analyze_external")
+def analyze_external(q: str, username: str, db: Session = Depends(get_db)):
+    """
+    Caută pe iTunes, analizează, SALVEAZĂ în DB și adaugă la PREFERINȚELE utilizatorului.
+    """
+    print(f"🌍 {username} caută și adaugă: {q}")
+
+    # 1. Căutare pe iTunes
+    itunes_url = f"https://itunes.apple.com/search?term={q}&media=music&entity=song&limit=1"
+    try:
+        resp = requests.get(itunes_url).json()
+        if not resp["results"]:
+            return {"error": "Melodia nu a fost găsită pe iTunes."}
+
+        track = resp["results"][0]
+        full_name = f"{track['artistName']} - {track['trackName']}"
+        preview_url = track["previewUrl"]
+
+        # 2. Gestionare Melodie în DB (Verificăm / Adăugăm)
+        song_in_db = db.query(Song).filter(Song.title == full_name).first()
+
+        target_vector = None
+
+        if song_in_db:
+            print("⚡ Melodia există deja. O refolosim.")
+            target_vector = json.loads(song_in_db.vector_data)
+        else:
+            # Nu există -> O descărcăm și analizăm
+            print("⬇️ Descarc și analizez melodia nouă...")
+            temp_path = os.path.join(AUDIO_LIBRARY_PATH, f"temp_{uuid.uuid4()}.m4a")
+            os.makedirs(AUDIO_LIBRARY_PATH, exist_ok=True)
+
+            r = requests.get(preview_url)
+            with open(temp_path, 'wb') as f:
+                f.write(r.content)
+
+            target_vector = analyze_audio_file(temp_path)
+
+            if os.path.exists(temp_path):
+                os.remove(temp_path)  # Ștergem fișierul audio, păstrăm doar matematica
+
+            if target_vector:
+                # SALVARE PERMANENTĂ ÎN BAZA DE DATE
+                song_in_db = Song(title=full_name, vector_data=json.dumps(target_vector))
+                db.add(song_in_db)
+                db.commit()
+                db.refresh(song_in_db)
+            else:
+                return {"error": "AI-ul nu a putut analiza fișierul."}
+
+        # 3. Adăugare la Preferințele Utilizatorului (Link User <-> Song)
+        user = db.query(User).filter(User.username == username).first()
+        if user:
+            # Verificăm dacă nu o are deja
+            existing_pref = db.query(UserPreference).filter(
+                UserPreference.user_id == user.id,
+                UserPreference.song_id == song_in_db.id
+            ).first()
+
+            if not existing_pref:
+                new_pref = UserPreference(user_id=user.id, song_id=song_in_db.id)
+                db.add(new_pref)
+                db.commit()
+                print(f"✅ Adăugat '{full_name}' la preferințele lui {username}.")
+
+    except Exception as e:
+        return {"error": f"Eroare server: {str(e)}"}
+
+    # 4. Recomandări (Bazat pe melodia tocmai adăugată)
+    all_songs = db.query(Song).all()
+    scores = []
+    target_np = np.array(target_vector)
+
+    for song in all_songs:
+        if song.id == song_in_db.id: continue  # Nu ne recomandăm pe noi înșine
+
+        song_vec = np.array(json.loads(song.vector_data))
+        similarity = np.dot(target_np, song_vec) / (np.linalg.norm(target_np) * np.linalg.norm(song_vec))
+        scores.append((song.title, similarity))
+
+    scores.sort(key=lambda x: x[1], reverse=True)
+
+    return {
+        "source_song": full_name,
+        "recommendations": [s[0] for s in scores[:5]],
+        "added_to_library": True
+    }
+
+
+@app.get("/itunes_autocomplete")
+def itunes_autocomplete(q: str):
+    """
+    Returnează o listă scurtă de sugestii de la iTunes (Titlu + Artist).
+    """
+    if not q or len(q) < 2:
+        return []
+
+    # Cerem doar 5 rezultate pentru viteză
+    url = f"https://itunes.apple.com/search?term={q}&media=music&entity=song&limit=5"
+    try:
+        resp = requests.get(url).json()
+        results = []
+        for track in resp.get("results", []):
+            # Formatăm frumos: "Artist - Piesă"
+            display_name = f"{track['artistName']} - {track['trackName']}"
+            results.append(display_name)
+        # Eliminăm duplicatele (set) și returnăm lista
+        return list(set(results))
+    except:
+        return []
 
 if __name__ == "__main__":
     import uvicorn
