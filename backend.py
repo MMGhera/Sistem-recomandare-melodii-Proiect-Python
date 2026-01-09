@@ -907,6 +907,28 @@ def itunes_autocomplete(q: str):
     except:
         return []
 
+
+# --- ENDPOINT ȘTERGERE PREFERINȚĂ ---
+@app.delete("/pref")
+def delete_pref(username: str, song: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == username).first()
+    if not user:
+        return {"error": "User not found"}
+
+    # Găsim melodia
+    song_obj = db.query(Song).filter(Song.title == song).first()
+    if song_obj:
+        # Ștergem legătura dintre user și melodie
+        db.query(UserPreference).filter(
+            UserPreference.user_id == user.id,
+            UserPreference.song_id == song_obj.id
+        ).delete()
+        db.commit()
+        print(f"🗑️ {username} a șters: {song}")
+        return {"status": "deleted"}
+
+    return {"status": "song not found (ignored)"}
+
 if __name__ == "__main__":
     import uvicorn
     # Asta ține programul deschis și ascultă cereri
