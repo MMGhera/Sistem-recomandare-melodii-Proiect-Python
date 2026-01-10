@@ -4,13 +4,38 @@ import time
 
 # --- CONFIGURARE ---
 # Câte melodii să descarce per artist? (Max iTunes e 200, dar 20-30 e suficient)
-SONGS_PER_ARTIST = 10
+SONGS_PER_ARTIST = 20
 
 ARTISTS = [
-    "Metallica", "Eminem", "Mozart", "Dua Lipa", "Pink Floyd",
-    "The Weeknd", "Hans Zimmer", "AC/DC", "Taylor Swift", "Skrillex",
-    "Miles Davis", "Nirvana", "Queen", "Drake", "Rammstein",
-    "Beethoven", "Chopin", "Led Zeppelin", "Katy Perry", "Snoop Dogg"
+    # --- ROCK & METAL (Distors, Energie, Tobe) ---
+    "Metallica", "AC/DC", "Iron Maiden", "Nirvana", "Guns N' Roses",
+    "Linkin Park", "System of a Down", "Rammstein", "Queen", "Led Zeppelin",
+    "Pink Floyd", "Bon Jovi", "Red Hot Chili Peppers", "Slipknot",
+
+    # --- POP & MODERN (Producție curată, Voce) ---
+    "Taylor Swift", "Dua Lipa", "The Weeknd", "Ariana Grande", "Bruno Mars",
+    "Ed Sheeran", "Michael Jackson", "Madonna", "Lady Gaga", "Justin Bieber",
+    "Katy Perry", "Rihanna", "Beyonce", "Coldplay",
+
+    # --- HIP-HOP & RAP (Bass, Ritm, Vorbire) ---
+    "Eminem", "Drake", "Snoop Dogg", "Jay-Z", "Kendrick Lamar",
+    "50 Cent", "Dr. Dre", "Travis Scott", "Kanye West", "Post Malone",
+    "Tupac", "Notorious B.I.G.",
+
+    # --- ELECTRONIC & EDM (Sintetizatoare, Drop-uri) ---
+    "Skrillex", "Daft Punk", "Avicii", "Calvin Harris", "David Guetta",
+    "The Prodigy", "Tiesto", "Martin Garrix", "Marshmello", "The Chainsmokers",
+
+    # --- CLASSICAL & SOUNDTRACK (Instrumental, Dinamică mare) ---
+    "Mozart", "Beethoven", "Bach", "Chopin", "Vivaldi",
+    "Hans Zimmer", "John Williams", "Ludovico Einaudi", "Tchaikovsky",
+
+    # --- JAZZ, BLUES & SOUL (Saxofon, Pian, Relaxare) ---
+    "Miles Davis", "Louis Armstrong", "Frank Sinatra", "Ray Charles",
+    "John Coltrane", "Aretha Franklin", "Stevie Wonder", "Amy Winehouse",
+
+    # --- REGGAE & LATIN (Ritmuri specifice) ---
+    "Bob Marley", "Shakira", "Enrique Iglesias", "Bad Bunny", "Luis Fonsi"
 ]
 
 AUDIO_LIBRARY_PATH = "audio_library"
