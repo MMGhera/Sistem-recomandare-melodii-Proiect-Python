@@ -43,7 +43,7 @@ Un sistem full-stack de recomandare muzicală care folosește **Deep Learning** 
 
 ### Cerințe Preliminare (Prerequisites)
 Înainte de a începe, asigură-te că ai instalate următoarele pe calculator:
-* **Python 3.9+** (Bifează "Add to PATH" la instalare)
+* **Python 3.10+** (Bifează "Add to PATH" la instalare)
 * **Node.js** (Pentru interfață)
 * **FFmpeg** (Pentru procesarea audio)
 
