@@ -8,25 +8,25 @@ Un sistem full-stack de recomandare muzicală care folosește **Deep Learning** 
 ![PyTorch](https://img.shields.io/badge/PyTorch-AI-orange)
 ![SQLite](https://img.shields.io/badge/Database-SQLite-lightgrey)
 
-## ✨ Funcționalități Principale
+##  Funcționalități Principale
 
-* **🔍 Motor de Căutare Live & Analiză Instant:**
+* ** Motor de Căutare Live & Analiză Instant:**
     * Utilizatorul caută o melodie (prin iTunes API).
     * Backend-ul descarcă un preview audio de 30s.
     * AI-ul generează o spectrogramă și extrage vectorul de caracteristici în timp real.
     * Melodia este adăugată automat în bibliotecă și legată de profilul utilizatorului.
-* **🧠 Recomandări Bazate pe Conținut (Content-Based Filtering):**
+* ** Recomandări Bazate pe Conținut (Content-Based Filtering):**
     * Folosește **Cosine Similarity** pentru a găsi melodii care "sună" la fel, nu doar care au același gen în tag-uri.
     * Analizează timbrul, ritmul și instrumentația.
-* **🤖 The Harvester (Colector Automat de Date):**
+* ** The Harvester (Colector Automat de Date):**
     * Un script automatizat care populează baza de date.
     * Scanează artiști, descarcă sample-uri, le trece prin AI și stochează vectorii, ștergând fișierele audio pentru a economisi spațiu.
-* **⚡ Interfață Modernă:**
+* ** Interfață Modernă:**
     * Frontend React rapid cu Vite.
     * Autocomplete (Live Search) cu Debounce.
     * Management vizual al bibliotecii personale.
 
-## 🛠️ Tehnologii Folosite
+##  Tehnologii Folosite
 
 ### Backend
 * **Python & FastAPI:** Pentru API-ul REST rapid.
@@ -39,7 +39,7 @@ Un sistem full-stack de recomandare muzicală care folosește **Deep Learning** 
 * **React.js (Vite):** Framework UI.
 * **CSS Modules:** Stilizare modernă și responsivă.
 
-## 🚀 Instalare și Configurare
+##  Instalare și Configurare
 
 ### Cerințe Preliminare (Prerequisites)
 Înainte de a începe, asigură-te că ai instalate următoarele pe calculator:
@@ -49,7 +49,7 @@ Un sistem full-stack de recomandare muzicală care folosește **Deep Learning** 
 
 ---
 
-### 🟢 Metoda Rapidă (Windows)
+###  Metoda Rapidă (Windows)
 
 Am automatizat tot procesul pentru tine!
 
@@ -57,7 +57,7 @@ Am automatizat tot procesul pentru tine!
 Dă dublu-click pe fișierul:
 `install_all.bat`
 
-> ⏳ **Ce face acest script?**
+>  **Ce face acest script?**
 > * Creează mediul virtual Python (`.venv`).
 > * Instalează toate bibliotecile necesare (`PyTorch`, `Librosa`, `FastAPI`).
 > * Intră în folderul de frontend și instalează pachetele `React` (`node_modules`).
@@ -66,14 +66,14 @@ Dă dublu-click pe fișierul:
 După ce instalarea e gata, dă dublu-click pe:
 `run_app.bat`
 
-> 🚀 **Ce face acest script?**
+>  **Ce face acest script?**
 > * Pornește serverul Backend într-o fereastră.
 > * Pornește serverul Frontend în altă fereastră.
 > * Deschide automat browserul tău la adresa aplicației (`http://localhost:5173`).
 
 ---
 
-### ⚙️ Metoda Manuală (Mac / Linux / Debugging)
+###  Metoda Manuală (Mac / Linux / Debugging)
 
 Dacă nu folosești Windows sau preferi terminalul:
 
