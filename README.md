@@ -91,8 +91,10 @@ python backend.py
 ```
 
 #### 2. Frontend Setup
+```
 cd muzica_UI
 npm install
 npm run dev
+```
 
 Aceasta aplicatie este proiectul realizat de studentii Baiaș Andrei Silviu, Gherasim Mihnea Matei, Dragomir Mihai Andrei si  Dicu Tudor Andrei la disciplina **Proiect Python**.
