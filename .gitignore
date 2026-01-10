@@ -23,3 +23,5 @@ users.json
 audio_library
 
 *.db-journal
+
+req.txt
