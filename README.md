@@ -1,5 +1,4 @@
 # Sistem-recomandare-melodii-Proiect-Python
-Un sistem de recomandare a melodiilor in functie de gusturile utilizatorului, bazat pe Machine Learning.
 
 Un sistem full-stack de recomandare muzicală care folosește **Deep Learning** pentru a analiza conținutul audio al melodiilor (nu doar metadatele). Aplicația "ascultă" piese, extrage caracteristici audio complexe folosind o rețea neuronală (CNN) și recomandă melodii similare pe baza distanței vectoriale.
 
@@ -40,4 +39,5 @@ Un sistem full-stack de recomandare muzicală care folosește **Deep Learning** 
 * **React.js (Vite):** Framework UI.
 * **CSS Modules:** Stilizare modernă și responsivă.
 
+###
 Aceasta aplicatie este proiectul realizat de studentii Baiaș Andrei Silviu, Gherasim Mihnea Matei, Dragomir Mihai Andrei si  Dicu Tudor Andrei la disciplina **Proiect Python**.
