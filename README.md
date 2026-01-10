@@ -2,7 +2,7 @@
 
 Un sistem full-stack de recomandare muzicală care folosește **Deep Learning** pentru a analiza conținutul audio al melodiilor (nu doar metadatele). Aplicația "ascultă" piese, extrage caracteristici audio complexe folosind o rețea neuronală (CNN) și recomandă melodii similare pe baza distanței vectoriale.
 
-![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
+![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.95+-green.svg)
 ![React](https://img.shields.io/badge/React-18-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-AI-orange)
