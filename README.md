@@ -35,10 +35,64 @@ Un sistem full-stack de recomandare muzicală care folosește **Deep Learning** 
 * **SQLAlchemy & SQLite:** Stocarea structurată a utilizatorilor, melodiilor și vectorilor (serializați JSON).
 * **FFmpeg:** Decodare audio universală (.m4a, .mp3).
 
-Asigură-te că ai **Python 3.10+** și **FFmpeg** instalat pe sistem.
-
 ### Frontend
 * **React.js (Vite):** Framework UI.
 * **CSS Modules:** Stilizare modernă și responsivă.
+
+## 🚀 Instalare și Configurare
+
+### Cerințe Preliminare (Prerequisites)
+Înainte de a începe, asigură-te că ai instalate următoarele pe calculator:
+* **Python 3.9+** (Bifează "Add to PATH" la instalare)
+* **Node.js** (Pentru interfață)
+* **FFmpeg** (Pentru procesarea audio)
+
+---
+
+### 🟢 Metoda Rapidă (Windows)
+
+Am automatizat tot procesul pentru tine!
+
+#### 1. Instalare Dependențe
+Dă dublu-click pe fișierul:
+`install_all.bat`
+
+> ⏳ **Ce face acest script?**
+> * Creează mediul virtual Python (`.venv`).
+> * Instalează toate bibliotecile necesare (`PyTorch`, `Librosa`, `FastAPI`).
+> * Intră în folderul de frontend și instalează pachetele `React` (`node_modules`).
+
+#### 2. Pornire Aplicație
+După ce instalarea e gata, dă dublu-click pe:
+`run_app.bat`
+
+> 🚀 **Ce face acest script?**
+> * Pornește serverul Backend într-o fereastră.
+> * Pornește serverul Frontend în altă fereastră.
+> * Deschide automat browserul tău la adresa aplicației (`http://localhost:5173`).
+
+---
+
+### ⚙️ Metoda Manuală (Mac / Linux / Debugging)
+
+Dacă nu folosești Windows sau preferi terminalul:
+
+#### 1. Backend Setup
+```bash
+# Activare mediu virtual
+python -m venv .venv
+source .venv/bin/activate  # Pe Mac/Linux
+
+# Instalare pachete
+pip install -r requirements.txt
+
+# Pornire server
+python backend.py
+```
+
+#### 2. Frontend Setup
+cd muzica_UI
+npm install
+npm run dev
 
 Aceasta aplicatie este proiectul realizat de studentii Baiaș Andrei Silviu, Gherasim Mihnea Matei, Dragomir Mihai Andrei si  Dicu Tudor Andrei la disciplina **Proiect Python**.
