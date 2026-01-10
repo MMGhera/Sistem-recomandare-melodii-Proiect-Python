@@ -39,5 +39,5 @@ Un sistem full-stack de recomandare muzicală care folosește **Deep Learning** 
 * **React.js (Vite):** Framework UI.
 * **CSS Modules:** Stilizare modernă și responsivă.
 
-###
+###  
 Aceasta aplicatie este proiectul realizat de studentii Baiaș Andrei Silviu, Gherasim Mihnea Matei, Dragomir Mihai Andrei si  Dicu Tudor Andrei la disciplina **Proiect Python**.
