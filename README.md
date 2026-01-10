@@ -35,6 +35,8 @@ Un sistem full-stack de recomandare muzicală care folosește **Deep Learning** 
 * **SQLAlchemy & SQLite:** Stocarea structurată a utilizatorilor, melodiilor și vectorilor (serializați JSON).
 * **FFmpeg:** Decodare audio universală (.m4a, .mp3).
 
+Asigură-te că ai **Python 3.9+** și **FFmpeg** instalat pe sistem.
+
 ### Frontend
 * **React.js (Vite):** Framework UI.
 * **CSS Modules:** Stilizare modernă și responsivă.
