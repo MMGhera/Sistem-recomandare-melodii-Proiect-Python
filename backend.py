@@ -1,13 +1,36 @@
 #V4V4
 import sys
 import os
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
 import json
 import torch
 import numpy as np
 import librosa
-import ai.dataset
-# Îi spunem lui Python: "Când cineva caută 'dataset', dă-i 'ai.dataset'"
-sys.modules['dataset'] = ai.dataset
+# import ai.dataset
+# # Îi spunem lui Python: "Când cineva caută 'dataset', dă-i 'ai.dataset'"
+# sys.modules['dataset'] = ai.dataset
+
+# --- SETUP IMPORTURI AI ---
+sys.path.append(os.path.dirname(__file__))
+
+# 1. Importăm modulul dataset (cel care este folderul colegului)
+import dataset
+
+try:
+    # Importăm componentele AI din locația lor reală
+    from ai.model import MusiCNN, INSTRUMENT_MAP
+    # Importăm ȘI MelConfig explicit
+    from ai.dataset import generate_melspectrogram, MelConfig
+
+    # Îi spunem Python-ului: "Dacă cineva caută MelConfig în dataset, dă-i-l pe ăsta!"
+    dataset.MelConfig = MelConfig
+
+except ImportError as e:
+    print(f"⚠️ Warning importuri AI: {e}")
+
+from dataset.extract import get_features_from_path
 
 import requests
 import uuid # Pentru nume unice la fișiere temporare
@@ -17,6 +40,7 @@ from pydantic import BaseModel
 from contextlib import asynccontextmanager
 from typing import List
 from sqlalchemy.orm import Session
+from sklearn.preprocessing import normalize
 
 # --- IMPORTURI DB ---
 from models import create_tables, get_db, User, Song, UserPreference, SessionLocal
@@ -28,6 +52,8 @@ try:
     from ai.dataset import generate_melspectrogram
 except ImportError:
     pass  # Ignorăm dacă nu merge importul local, doar pentru test
+
+
 
 # --- CONFIGURARE AI ---
 AI_MODEL_PATH = os.path.join("ai", "checkpoints", "big_sample_rate", "best.pt")
@@ -75,7 +101,7 @@ app.add_middleware(
 # --- LOGICA AI (Aceeași ca înainte) ---
 
 def analyze_audio_file(file_path):
-    # Verificări preliminare
+    # Verificări preliminare AI
     model = ai_context["model"]
     cfg = ai_context["config"]
     device = ai_context["device"]
@@ -84,17 +110,17 @@ def analyze_audio_file(file_path):
         return None
 
     try:
-        # 1. Încărcare Audio (cu librosa)
-        # Folosind try-catch intern pentru a prinde erorile specifice de codec
-        audio, sr = librosa.load(file_path, sr=None)
+        # --- PARTEA 1: AI (Deep Learning - MusiCNN) ---
+        # 1. Încărcare Audio
+        audio, sr = librosa.load(file_path, sr=None)  # Încărcăm tot fișierul pentru AI
 
-        # 2. Resample la frecvența modelului
-        audio = librosa.resample(audio, orig_sr=sr, target_sr=cfg["mel_config"].sample_rate)
+        # 2. Resample
+        audio_resampled = librosa.resample(audio, orig_sr=sr, target_sr=cfg["mel_config"].sample_rate)
 
-        # 3. Generare Spectrogramă
-        mel = generate_melspectrogram(audio, cfg["mel_config"])
+        # 3. Spectrogramă
+        mel = generate_melspectrogram(audio_resampled, cfg["mel_config"])
 
-        # 4. Împărțire în bucăți (Chunking)
+        # 4. Chunking
         frames_win = cfg["frames_per_window"]
         chunks = []
         total_frames = mel.shape[1]
@@ -107,24 +133,41 @@ def analyze_audio_file(file_path):
             chunks.append(chunk)
 
         if not chunks:
-            return None
+            ai_vector = np.zeros(128)  # Fallback dacă e gol (depinde de output-ul modelului tău)
+        else:
+            # 5. Predicție
+            batch_tensor = np.stack(chunks)
+            batch_tensor = torch.from_numpy(batch_tensor).float().unsqueeze(1).to(device)
 
-        # 5. Predicție AI
-        batch_tensor = np.stack(chunks)
-        batch_tensor = torch.from_numpy(batch_tensor).float().unsqueeze(1).to(device)
+            with torch.no_grad():
+                logits = model(batch_tensor)
+                probs = logits.cpu().numpy()
 
-        with torch.no_grad():
-            logits = model(batch_tensor)
-            probs = logits.cpu().numpy()
+            # 6. Max Pooling
+            ai_vector = np.max(probs, axis=0)
 
-        # 6. Agregare rezultate (Max Pooling)
-        song_vector = np.max(probs, axis=0)
-        return song_vector.tolist()
+        # --- PARTEA 2: CLASIC (Metoda Colegului) ---
+        # Aici apelăm funcția importată din dataset/extract.py
+        classic_vector = get_features_from_path(file_path)
+
+        # --- PARTEA 3: FUZIUNEA (Concatenare + Normalizare) ---
+
+        # Reshape pentru sklearn (vrea matrice 2D)
+        ai_vector_2d = ai_vector.reshape(1, -1)
+        classic_vector_2d = classic_vector.reshape(1, -1)
+
+        # Normalizare L2 (aduce vectorii la scară comună)
+        ai_norm = normalize(ai_vector_2d, axis=1, norm='l2')[0]
+        classic_norm = normalize(classic_vector_2d, axis=1, norm='l2')[0]
+
+        # Concatenare
+        final_vector = np.concatenate([ai_norm, classic_norm])
+
+        print(f"✅ Analizat hibrid: {os.path.basename(file_path)} (Len: {len(final_vector)})")
+        return final_vector.tolist()
 
     except Exception as e:
-        # Dacă apare o eroare, o afișăm discret în consolă și returnăm None
-        # astfel încât scanarea să continue cu următoarea melodie
-        print(f"⚠️ Nu s-a putut analiza {os.path.basename(file_path)}: {e}")
+        print(f"⚠️ Eroare la analiză hibridă {file_path}: {e}")
         return None
 
 

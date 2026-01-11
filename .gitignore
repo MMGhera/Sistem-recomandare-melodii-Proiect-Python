@@ -25,3 +25,13 @@ audio_library
 *.db-journal
 
 req.txt
+
+dataset/*.csv
+dataset/features.csv
+dataset/features_old.csv
+dataset/test.py
+dataset/__pycache__/
+
+*.wav
+*.mp3
+*.au
