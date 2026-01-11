@@ -4,7 +4,7 @@ import time
 
 # --- CONFIGURARE ---
 # Câte melodii să descarce per artist? (Max iTunes e 200, dar 20-30 e suficient)
-SONGS_PER_ARTIST = 1
+SONGS_PER_ARTIST = 25
 
 ARTISTS = [
     # --- ROCK & METAL (Distors, Energie, Tobe) ---

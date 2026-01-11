@@ -26,11 +26,11 @@ audio_library
 
 req.txt
 
-dataset/*.csv
-dataset/features.csv
-dataset/features_old.csv
-dataset/test.py
-dataset/__pycache__/
+#dataset/*.csv
+#dataset/features.csv
+#dataset/features_old.csv
+#dataset/test.py
+#dataset/__pycache__/
 
 *.wav
 *.mp3
