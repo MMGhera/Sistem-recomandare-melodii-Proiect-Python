@@ -257,7 +257,7 @@ def scan_library(db: Session = Depends(get_db)):
                 print(f"🎵 Analizez: {song_name}...")
                 full_path = os.path.join(AUDIO_LIBRARY_PATH, file)
 
-                # AICI apelăm AI-ul tău
+                # AICI apelăm AI-ul 
                 # vector = analyze_audio_file(full_path)
                 # (Simulare vector pentru exemplul DB - tu decomentează analiza reală)
                 #vector = [0.1, 0.2, 0.3]  # Placeholder dacă nu merge analiza pe moment
@@ -281,21 +281,37 @@ def scan_library(db: Session = Depends(get_db)):
 @app.get("/recommend/{username}")
 def recommend(username: str, db: Session = Depends(get_db)):
     """ 
-    Versiunea clasică a colegilor:
-    - Filtrează doar după ID
-    - Nu face "fuzzy matching" sau "fingerprinting"
-    - DAR: Include logica de fetch artwork pt frontend
+    Recomandare Inteligentă:
+    1. Filtru ID (Primordial)
+    2. Filtru Amprentă (Artist + Titlu) - Permite titluri identice la artiști diferiți
+    3. Artwork Fetch (Vizual)
     """
     user = db.query(User).filter(User.username == username).first()
     if not user or not user.preferences:
         return {"recommendations": []}
 
-    # 1. Construim profilul userului
+    # --- HELPER: Amprenta Unică (Fingerprint) ---
+    def get_fingerprint(text):
+        if not text: return ""
+        # 1. Eliminăm conținutul din paranteze (ex: " (feat. X)", " [Live]")
+        # Asta asigură că "One" == "One (Remastered)"
+        text_no_brackets = re.sub(r'\s*[\(\[].*?[\)\]]', '', text)
+        
+        # 2. Păstrăm doar litere și cifre (eliminăm " - ", "&", "x", spații)
+        # "Metallica - One" devine "metallicaone"
+        return re.sub(r'[^a-z0-9]', '', text_no_brackets.lower())
+
+    # 1. Construim listele de excludere
     user_vectors = []
-    # Salvăm ID-urile pieselor tale pentru filtrarea simplă
-    my_song_ids = [p.song_id for p in user.preferences]
-    
+    my_song_ids = set()      # Filtru 1: ID-uri exacte
+    my_fingerprints = set()  # Filtru 2: Artist+Titlu normalizat
+
     for pref in user.preferences:
+        if pref.song:
+            my_song_ids.add(pref.song.id)
+            # Salvăm amprenta completă a piesei tale (care include Artist + Titlu)
+            my_fingerprints.add(get_fingerprint(pref.song.title))
+
         try:
             vec = json.loads(pref.song.vector_data)
             user_vectors.append(vec)
@@ -307,19 +323,26 @@ def recommend(username: str, db: Session = Depends(get_db)):
 
     user_profile = np.mean(np.array(user_vectors), axis=0)
 
-    # 2. Căutăm candidați (LOGICA ORIGINALĂ)
+    # 2. Căutăm candidați
     all_songs = db.query(Song).all()
     candidates = []
 
     for song in all_songs:
-        # --- FILTRU ORIGINAL (Simplu) ---
-        # Dacă ID-ul exact e la tine în listă, o sărim.
+        # A. FILTRU ID (Dacă e fix aceeași intrare din DB)
         if song.id in my_song_ids: 
             continue 
 
+        # B. FILTRU AMPRENTĂ (Artist + Titlu)
+        # Calculăm amprenta candidatului
+        candidate_fp = get_fingerprint(song.title)
+        
+        # Dacă "artisttitlu" există deja în lista ta, e duplicat
+        if candidate_fp in my_fingerprints:
+            continue
+
+        # C. Calcul AI
         try:
             song_vec = np.array(json.loads(song.vector_data))
-            # Cosine Similarity
             similarity = np.dot(user_profile, song_vec) / (np.linalg.norm(user_profile) * np.linalg.norm(song_vec))
             
             if similarity > 0.35:
@@ -327,29 +350,36 @@ def recommend(username: str, db: Session = Depends(get_db)):
         except:
             continue
 
-    # 3. Sortăm
+    # 3. Sortăm rezultatele
     candidates.sort(key=lambda x: x[1], reverse=True)
 
-    # 4. Formatăm răspunsul PENTRU GRID (Aici e noutatea vizuală)
+    # 4. Formatăm + Deduplicare Internă (în lista de 12)
     final_recommendations = []
-    
-    # Luăm top 12 rezultate așa cum sunt ele (fără deduplicare avansată)
-    for song, score in candidates[:12]:
-        
-        # Formatare text simplă
+    seen_in_recs = set()
+
+    for song, score in candidates:
+        # Nu vrem duplicate nici în lista de recomandări
+        # Ex: Să nu îți arate și "Metallica - One" și "Metallica - One (Live)" una lângă alta
+        c_fp = get_fingerprint(song.title)
+        if c_fp in seen_in_recs:
+            continue
+        seen_in_recs.add(c_fp)
+
+        # Formatare text vizual (Artist - Titlu)
         if " - " in song.title:
             parts = song.title.split(" - ", 1)
             artist, title = parts[0], parts[1]
         else:
             artist, title = "Unknown Artist", song.title
 
-        # --- ARTWORK FETCH (Feature-ul pe care l-ai cerut) ---
+        # Artwork Fetch
         cover_url = None
         try:
-            search_url = f"https://itunes.apple.com/search?term={song.title}&media=music&entity=song&limit=1"
-            itunes_resp = requests.get(search_url, timeout=1).json()
-            if itunes_resp["results"]:
-                cover_url = itunes_resp["results"][0]["artworkUrl100"]
+            if len(final_recommendations) < 12:
+                search_url = f"https://itunes.apple.com/search?term={song.title}&media=music&entity=song&limit=1"
+                itunes_resp = requests.get(search_url, timeout=1).json()
+                if itunes_resp["results"]:
+                    cover_url = itunes_resp["results"][0]["artworkUrl100"]
         except:
             pass
 
@@ -360,6 +390,9 @@ def recommend(username: str, db: Session = Depends(get_db)):
             "score": float(score),
             "cover": cover_url
         })
+
+        if len(final_recommendations) >= 12:
+            break
             
     return {"recommendations": final_recommendations}
 
@@ -452,8 +485,7 @@ def analyze_external(q: str, username: str, db: Session = Depends(get_db)):
         "added_to_library": True
     }
 
-
-@app.get("/itunes_autocomplete")
+# --- ENDPOINT NOU: ITUNES AUTOCOMPLETE ---
 @app.get("/itunes_autocomplete")
 def itunes_autocomplete(q: str):
     """
