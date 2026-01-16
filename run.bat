@@ -16,3 +16,4 @@ timeout /t 4 /nobreak >nul
 start http://localhost:5173
 
 echo Aplicatia ruleaza! Nu inchide ferestrele negre.
+timeout /t 4 /nobreak >nul

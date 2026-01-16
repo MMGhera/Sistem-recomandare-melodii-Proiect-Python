@@ -8,109 +8,177 @@ Un sistem full-stack de recomandare muzicală care folosește **Deep Learning** 
 ![PyTorch](https://img.shields.io/badge/PyTorch-AI-orange)
 ![SQLite](https://img.shields.io/badge/Database-SQLite-lightgrey)
 
+---
+
 ## Arhitectura Hibridă (Hybrid Engine)
 
 Inovația principală a acestui proiect constă în fuziunea a două metode distincte de analiză audio, eliminând punctele slabe ale fiecăreia:
 
-1. **Deep Learning (Visual/Abstract):**
-   - Folosește o rețea neuronală convoluțională (MusiCNN) antrenată cu PyTorch.
-   - Analizează spectrogramele vizuale pentru a detecta structuri complexe (refren, atmosferă, progresie).
+1. **Deep Learning (Visual / Abstract)**
 
-2. **Signal Processing (Statistical/Math):**
-   - Folosește algoritmi matematici clasici (DSP) prin Librosa.
-   - Extrage indicatori fizici preciși: Tempo (BPM), Energie (RMS), Timbrul (MFCC), Spectral Centroid și Zero Crossing Rate.
+   * Rețea neuronală convoluțională (MusiCNN) antrenată cu PyTorch.
+   * Analizează spectrograme pentru a detecta structuri muzicale complexe (refren, atmosferă, progresie).
 
-Cei doi vectori sunt normalizați și concatenați într-un singur "Super-Vector" salvat în baza de date pentru o precizie maximă a recomandărilor.
+2. **Signal Processing (Statistical / Math)**
+
+   * Algoritmi DSP clasici prin Librosa.
+   * Extrage caracteristici fizice: Tempo (BPM), Energie (RMS), Timbru (MFCC), Spectral Centroid, Zero Crossing Rate.
+
+Cei doi vectori sunt normalizați și concatenați într-un singur **vector hibrid**, stocat în baza de date și folosit pentru recomandări precise.
+
+---
 
 ## Funcționalități Principale
 
-* **Motor de Căutare Live & Analiză Hibridă:**
-  - Utilizatorul caută o melodie (prin iTunes API).
-  - Backend-ul descarcă un preview audio de 30s.
-  - Sistemul rulează simultan modelele AI și DSP, generând vectorul combinat în timp real.
-  - Melodia este adăugată automat în bibliotecă și legată de profilul utilizatorului.
+* **Motor de Căutare Live & Analiză Hibridă**
 
-* **Recomandări Bazate pe Conținut (Content-Based Filtering):**
-  - Folosește **Cosine Similarity** pe vectorii hibrizi pentru a găsi melodii similare auditiv.
-  - Analizează simultan stilul (prin AI) și caracteristicile fizice (Ritm/Timbru).
+  * Căutare melodii prin iTunes API.
+  * Descărcare preview audio (30s).
+  * Analiză simultană AI + DSP.
+  * Adăugare automată în bibliotecă și asociere cu utilizatorul.
 
-* **The Harvester (Colector Automat de Date):**
-  - Un script automatizat care populează baza de date.
-  - Scanează artiști, descarcă sample-uri, le trece prin pipeline-ul hibrid și stochează vectorii, ștergând fișierele audio pentru a economisi spațiu.
+* **Recomandări Bazate pe Conținut (Content-Based Filtering)**
 
-* **Interfață Modernă:**
-  - Frontend React rapid cu Vite.
-  - Autocomplete (Live Search) cu Debounce.
-  - Management vizual al bibliotecii personale.
+  * Similaritate Cosinus pe vectorii hibrizi.
+  * Corelare între stil muzical și caracteristici audio fizice.
+
+* **The Harvester (Colector Automat de Date)**
+
+  * Script automat de populare a bazei de date.
+  * Procesează artiști, generează vectori și șterge fișierele audio pentru economie de spațiu.
+
+* **Interfață Modernă**
+
+  * Frontend React (Vite).
+  * Live Search cu debounce.
+  * Management vizual al bibliotecii personale.
+
+---
 
 ## Tehnologii Folosite
 
 ### Backend
-* **Python & FastAPI:** API REST rapid pentru comunicarea dintre module.
-* **PyTorch & Torchaudio:** Modulul de Deep Learning.
-* **Scikit-Learn:** Pentru normalizarea și fuziunea vectorilor.
-* **Librosa:** Pentru procesarea semnalului audio și extragerea statistică.
-* **SQLAlchemy & SQLite:** Stocarea structurată a datelor și vectorilor JSON.
+
+* Python & FastAPI
+* PyTorch & Torchaudio
+* Librosa (DSP)
+* Scikit-Learn (normalizare și similaritate)
+* SQLAlchemy & SQLite
 
 ### Frontend
-* **React.js (Vite):** Framework UI.
-* **CSS Modules:** Stilizare modernă și responsivă.
+
+* React.js (Vite)
+* CSS Modules
+
+---
 
 ## Instalare și Configurare
 
 ### Cerințe Preliminare
-Înainte de a începe, asigură-te că ai instalate următoarele pe calculator:
-* **Python 3.10+** (Bifează "Add to PATH" la instalare)
-* **Node.js** (Pentru interfață)
-* **FFmpeg** (Pentru procesarea audio)
+
+Asigură-te că sunt instalate:
+
+* **Python 3.10+** (cu *Add to PATH*)
+* **Node.js**
+* **FFmpeg**
+
+> **Important:** Asigură-te că te afli în folderul **root** al proiectului (acolo unde se află `backend.py`) înainte de a continua.
 
 ---
 
-### Metoda Rapidă (Windows)
+## Metoda Rapidă (Windows)
 
-Am automatizat tot procesul pentru tine!
+**Am automatizat tot procesul pentru tine!**
 
-#### 1. Instalare Dependențe
+### 1. Instalare Dependențe
+
 Dă dublu-click pe fișierul:
-`install_all.bat`
 
-> **Ce face acest script?**
-> - Creează mediul virtual Python (`.venv`).
-> - Instalează toate bibliotecile necesare (PyTorch, Librosa, Scikit-Learn, FastAPI).
-> - Intră în folderul de frontend și instalează pachetele React (`node_modules`).
+```
+install_all.bat
+```
 
-#### 2. Pornire Aplicație
-După ce instalarea e gata, dă dublu-click pe:
-`run_app.bat`
+**Ce face acest script?**
 
-> **Ce face acest script?**
-> - Pornește serverul Backend într-o fereastră.
-> - Pornește serverul Frontend în altă fereastră.
-> - Deschide automat browserul la adresa aplicației (`http://localhost:5173`).
+* Creează mediul virtual Python (`.venv`).
+* Instalează bibliotecile necesare (PyTorch, Librosa, Scikit-Learn, FastAPI).
+* Instalează dependențele frontend (`node_modules`).
+
+### 2. Pornire Aplicație
+
+Dă dublu-click pe fișierul:
+
+```
+run_app.bat
+```
+
+**Ce face acest script?**
+
+* Pornește backend-ul într-o fereastră separată.
+* Pornește frontend-ul React într-o altă fereastră.
+* Deschide automat aplicația în browser la:
+
+```
+http://localhost:5173
+```
 
 ---
 
-### Metoda Manuală (Mac / Linux / Debugging)
+## Rezolvarea Problemelor (Setup Manual)
 
-Dacă nu folosești Windows sau preferi terminalul:
+Dacă scripturile `.bat` nu pornesc, se închid imediat sau apar erori, urmează pașii manual de mai jos **în ordinea prezentată**.
 
-#### 1. Backend Setup
+### 1. Instalare Dependențe (Manual)
+
+Deschide un terminal în folderul **root** al proiectului.
+
+#### A. Configurare Backend (Python)
+
 ```bash
-# Activare mediu virtual
 python -m venv .venv
-source .venv/bin/activate  # Pe Mac/Linux
-
-# Instalare pachete
+call .venv\Scripts\activate
 pip install -r requirements.txt
-
-# Pornire server
-python backend.py
 ```
-#### 2. Frontend Setup
+
+#### B. Configurare Frontend (React)
+
 ```bash
 cd muzica_UI
 npm install
+cd ..
+```
+
+### 2. Pornire Aplicație (Manual)
+
+Vei avea nevoie de **două terminale separate**.
+
+#### Terminal 1 – Backend (API Python)
+
+```bash
+call .venv\Scripts\activate
+python backend.py
+```
+
+Lasă terminalul deschis. Dacă apare mesajul *"Application startup complete"*, backend-ul funcționează.
+
+#### Terminal 2 – Frontend (Interfață React)
+
+```bash
+cd muzica_UI
 npm run dev
 ```
 
-Această aplicație este proiectul realizat de studenții Baiaș Andrei Silviu, Gherasim Mihnea Matei, Dragomir Mihai Andrei și Dicu Tudor Andrei la disciplina Proiect Python.
+Deschide browserul la adresa afișată (de obicei `http://localhost:5173`).
+
+---
+
+## Autori
+
+Această aplicație este realizată de studenții:
+
+* **Baiaș Andrei Silviu**
+* **Gherasim Mihnea Matei**
+* **Dragomir Mihai Andrei**
+* **Dicu Tudor Andrei**
+
+în cadrul disciplinei **Proiect Python**.

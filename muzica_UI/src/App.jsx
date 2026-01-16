@@ -46,7 +46,7 @@
 
 import { useState } from 'react'
 import Login from './LoginForm'
-import MusicPreferences from './MusicPreferences' // <--- 1. IMPORTĂM COMPONENTA NOUĂ
+import MusicPreferences from './MusicPreferences'
 import './App.css'
 
 function App() {
@@ -62,25 +62,32 @@ function App() {
 
   return (
     <>
-      <h1>Music App 🎵</h1>
-
+      {/* Dacă nu e logat, arată Login */}
       {!currentUser ? (
         <Login onLoginSuccess={handleLoginSuccess} />
       ) : (
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h2>Salut, {currentUser}!</h2>
-            <button onClick={handleLogout} style={{ padding: '5px 10px', fontSize: '0.8rem', background: '#444' }}>
-              Log Out
-            </button>
-          </div>
+        /* Dacă e logat, arată Dashboard-ul */
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            {/* Butonul de Logout mic, sus în dreapta */}
+            <div style={{ position: 'absolute', top: '20px', right: '20px' }}>
+              <div id="currentUser">Signed in as <span id="textInCurrent">{currentUser}</span>!</div>
+                <button 
+                    onClick={handleLogout} 
+                    style={{ 
+                        background: 'rgba(0,0,0,0.3)', 
+                        border: '1px solid rgba(255,255,255,0.2)', 
+                        color: 'white', 
+                        padding: '8px 16px', 
+                        borderRadius: '20px',
+                        cursor: 'pointer'
+                    }}
+                >
+                    Log Out
+                </button>
+            </div>
 
-          <hr style={{ borderColor: '#444', marginBottom: '20px' }}/>
-
-          {/* --- 2. FOLOSIM COMPONENTA NOUĂ AICI --- */}
-          {/* Îi trimitem username-ul ca să știe pentru cine să salveze datele */}
-          <MusicPreferences username={currentUser} />
-
+            {/* Componenta Principală */}
+            <MusicPreferences username={currentUser} />
         </div>
       )}
     </>

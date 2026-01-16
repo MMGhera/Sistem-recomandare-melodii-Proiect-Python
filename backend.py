@@ -41,6 +41,7 @@ from contextlib import asynccontextmanager
 from typing import List
 from sqlalchemy.orm import Session
 from sklearn.preprocessing import normalize
+import re
 
 # --- IMPORTURI DB ---
 from models import create_tables, get_db, User, Song, UserPreference, SessionLocal
@@ -277,44 +278,90 @@ def scan_library(db: Session = Depends(get_db)):
 
     return {"status": "completed", "new_songs": processed}
 
-
 @app.get("/recommend/{username}")
 def recommend(username: str, db: Session = Depends(get_db)):
+    """ 
+    Versiunea clasică a colegilor:
+    - Filtrează doar după ID
+    - Nu face "fuzzy matching" sau "fingerprinting"
+    - DAR: Include logica de fetch artwork pt frontend
+    """
     user = db.query(User).filter(User.username == username).first()
     if not user or not user.preferences:
-        return {"recommendations": ["Adaugă preferințe!"]}
+        return {"recommendations": []}
 
     # 1. Construim profilul userului
     user_vectors = []
+    # Salvăm ID-urile pieselor tale pentru filtrarea simplă
+    my_song_ids = [p.song_id for p in user.preferences]
+    
     for pref in user.preferences:
-        user_vectors.append(json.loads(pref.song.vector_data))
+        try:
+            vec = json.loads(pref.song.vector_data)
+            user_vectors.append(vec)
+        except:
+            continue
 
     if not user_vectors:
         return {"recommendations": []}
 
-    # Media vectorilor
     user_profile = np.mean(np.array(user_vectors), axis=0)
 
-    # 2. Luăm toate melodiile din DB
+    # 2. Căutăm candidați (LOGICA ORIGINALĂ)
     all_songs = db.query(Song).all()
-    scores = []
-
-    my_song_ids = [p.song_id for p in user.preferences]
+    candidates = []
 
     for song in all_songs:
-        if song.id in my_song_ids: continue  # Excludem ce ascultă deja
+        # --- FILTRU ORIGINAL (Simplu) ---
+        # Dacă ID-ul exact e la tine în listă, o sărim.
+        if song.id in my_song_ids: 
+            continue 
 
-        song_vec = np.array(json.loads(song.vector_data))
+        try:
+            song_vec = np.array(json.loads(song.vector_data))
+            # Cosine Similarity
+            similarity = np.dot(user_profile, song_vec) / (np.linalg.norm(user_profile) * np.linalg.norm(song_vec))
+            
+            if similarity > 0.35:
+                candidates.append((song, similarity))
+        except:
+            continue
 
-        # Cosine Similarity
-        similarity = np.dot(user_profile, song_vec) / (np.linalg.norm(user_profile) * np.linalg.norm(song_vec))
+    # 3. Sortăm
+    candidates.sort(key=lambda x: x[1], reverse=True)
 
-        if similarity > 0.35:  # Prag minim
-            scores.append((song.title, similarity))
+    # 4. Formatăm răspunsul PENTRU GRID (Aici e noutatea vizuală)
+    final_recommendations = []
+    
+    # Luăm top 12 rezultate așa cum sunt ele (fără deduplicare avansată)
+    for song, score in candidates[:12]:
+        
+        # Formatare text simplă
+        if " - " in song.title:
+            parts = song.title.split(" - ", 1)
+            artist, title = parts[0], parts[1]
+        else:
+            artist, title = "Unknown Artist", song.title
 
-    scores.sort(key=lambda x: x[1], reverse=True)
-    return {"recommendations": [s[0] for s in scores[:5]]}
+        # --- ARTWORK FETCH (Feature-ul pe care l-ai cerut) ---
+        cover_url = None
+        try:
+            search_url = f"https://itunes.apple.com/search?term={song.title}&media=music&entity=song&limit=1"
+            itunes_resp = requests.get(search_url, timeout=1).json()
+            if itunes_resp["results"]:
+                cover_url = itunes_resp["results"][0]["artworkUrl100"]
+        except:
+            pass
 
+        final_recommendations.append({
+            "title": title,
+            "artist": artist,
+            "full_text": song.title,
+            "score": float(score),
+            "cover": cover_url
+        })
+            
+    return {"recommendations": final_recommendations}
 
 # --- ENDPOINT NOU: ANALIZĂ EXTERNĂ LIVE ---
 @app.get("/analyze_external")
@@ -407,25 +454,37 @@ def analyze_external(q: str, username: str, db: Session = Depends(get_db)):
 
 
 @app.get("/itunes_autocomplete")
+@app.get("/itunes_autocomplete")
 def itunes_autocomplete(q: str):
     """
-    Returnează o listă scurtă de sugestii de la iTunes (Titlu + Artist).
+    Returnează o listă de obiecte cu Titlu, Artist și POZĂ (artwork).
     """
     if not q or len(q) < 2:
         return []
 
-    # Cerem doar 5 rezultate pentru viteză
+    # Cerem 5 rezultate
     url = f"https://itunes.apple.com/search?term={q}&media=music&entity=song&limit=5"
+    
     try:
         resp = requests.get(url).json()
         results = []
+        
         for track in resp.get("results", []):
-            # Formatăm frumos: "Artist - Piesă"
-            display_name = f"{track['artistName']} - {track['trackName']}"
-            results.append(display_name)
-        # Eliminăm duplicatele (set) și returnăm lista
-        return list(set(results))
-    except:
+            # Extragem datele necesare
+            item = {
+                "title": track.get('trackName'),
+                "artist": track.get('artistName'),
+                # Luăm poza de calitate mai bună (100x100)
+                "cover": track.get('artworkUrl100'), 
+                # Păstrăm și textul complet pentru logică
+                "full_text": f"{track.get('artistName')} - {track.get('trackName')}"
+            }
+            results.append(item)
+            
+        return results
+
+    except Exception as e:
+        print(f"Eroare autocomplete: {e}")
         return []
 
 
