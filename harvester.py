@@ -2,39 +2,37 @@ import requests
 import os
 import time
 
-# --- CONFIGURARE ---
-# Câte melodii să descarce per artist? (Max iTunes e 200, dar 20-30 e suficient)
 SONGS_PER_ARTIST = 25
 
 ARTISTS = [
-    # --- ROCK & METAL (Distors, Energie, Tobe) ---
+    #  ROCK & METAL
     "Metallica", "AC/DC", "Iron Maiden", "Nirvana", "Guns N' Roses",
     "Linkin Park", "System of a Down", "Rammstein", "Queen", "Led Zeppelin",
     "Pink Floyd", "Bon Jovi", "Red Hot Chili Peppers", "Slipknot",
 
-    # --- POP & MODERN (Producție curată, Voce) ---
+    #  POP & MODERN
     "Taylor Swift", "Dua Lipa", "The Weeknd", "Ariana Grande", "Bruno Mars",
     "Ed Sheeran", "Michael Jackson", "Madonna", "Lady Gaga", "Justin Bieber",
     "Katy Perry", "Rihanna", "Beyonce", "Coldplay",
 
-    # --- HIP-HOP & RAP (Bass, Ritm, Vorbire) ---
+    #  HIP-HOP & RAP
     "Eminem", "Drake", "Snoop Dogg", "Jay-Z", "Kendrick Lamar",
     "50 Cent", "Dr. Dre", "Travis Scott", "Kanye West", "Post Malone",
     "Tupac", "Notorious B.I.G.",
 
-    # --- ELECTRONIC & EDM (Sintetizatoare, Drop-uri) ---
+    #  ELECTRONIC & EDM
     "Skrillex", "Daft Punk", "Avicii", "Calvin Harris", "David Guetta",
     "The Prodigy", "Tiesto", "Martin Garrix", "Marshmello", "The Chainsmokers",
 
-    # --- CLASSICAL & SOUNDTRACK (Instrumental, Dinamică mare) ---
+    #  CLASSICAL & SOUNDTRACK
     "Mozart", "Beethoven", "Bach", "Chopin", "Vivaldi",
     "Hans Zimmer", "John Williams", "Ludovico Einaudi", "Tchaikovsky",
 
-    # --- JAZZ, BLUES & SOUL (Saxofon, Pian, Relaxare) ---
+    #  JAZZ, BLUES & SOUL
     "Miles Davis", "Louis Armstrong", "Frank Sinatra", "Ray Charles",
     "John Coltrane", "Aretha Franklin", "Stevie Wonder", "Amy Winehouse",
 
-    # --- REGGAE & LATIN (Ritmuri specifice) ---
+    #  REGGAE & LATIN
     "Bob Marley", "Shakira", "Enrique Iglesias", "Bad Bunny", "Luis Fonsi"
 ]
 
@@ -82,7 +80,7 @@ def trigger_server_scan():
 
 
 if __name__ == "__main__":
-    print(f"--- 🎵 HARVESTER: Descărcăm top {SONGS_PER_ARTIST} melodii/artist 🎵 ---")
+    print(f" 🎵 HARVESTER: Descărcăm top {SONGS_PER_ARTIST} melodii/artist 🎵 ")
 
     songs_downloaded = 0
 
