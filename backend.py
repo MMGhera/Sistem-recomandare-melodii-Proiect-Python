@@ -8,14 +8,11 @@ import json
 import torch
 import numpy as np
 import librosa
-# import ai.dataset
-# # Îi spunem lui Python: "Când cineva caută 'dataset', dă-i 'ai.dataset'"
-# sys.modules['dataset'] = ai.dataset
 
-# --- SETUP IMPORTURI AI ---
+# - SETUP IMPORTURI AI -
 sys.path.append(os.path.dirname(__file__))
 
-# 1. Importăm modulul dataset (cel care este folderul colegului)
+# 1. Importăm modulul dataset
 import dataset
 
 try:
@@ -23,8 +20,6 @@ try:
     from ai.model import MusiCNN, INSTRUMENT_MAP
     # Importăm ȘI MelConfig explicit
     from ai.dataset import generate_melspectrogram, MelConfig
-
-    # Îi spunem Python-ului: "Dacă cineva caută MelConfig în dataset, dă-i-l pe ăsta!"
     dataset.MelConfig = MelConfig
 
 except ImportError as e:
@@ -38,15 +33,14 @@ from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
-from typing import List
 from sqlalchemy.orm import Session
 from sklearn.preprocessing import normalize
 import re
 
-# --- IMPORTURI DB ---
+# - IMPORTURI DB -
 from models import create_tables, get_db, User, Song, UserPreference, SessionLocal
 
-# --- SETUP IMPORTURI AI ---
+# - SETUP IMPORTURI AI -
 sys.path.append(os.path.dirname(__file__))
 try:
     from ai.model import MusiCNN, INSTRUMENT_MAP
@@ -55,14 +49,13 @@ except ImportError:
     pass  # Ignorăm dacă nu merge importul local, doar pentru test
 
 
-
-# --- CONFIGURARE AI ---
+# - CONFIGURARE AI -
 AI_MODEL_PATH = os.path.join("ai", "checkpoints", "big_sample_rate", "best.pt")
 AUDIO_LIBRARY_PATH = "audio_library"
 ai_context = {"model": None, "config": None, "device": None}
 
 
-# --- LIFESPAN ---
+# - LIFESPAN -
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # 1. Inițializăm Baza de Date SQL
@@ -99,7 +92,7 @@ app.add_middleware(
 )
 
 
-# --- LOGICA AI (Aceeași ca înainte) ---
+# - LOGICA AI -
 
 def analyze_audio_file(file_path):
     # Verificări preliminare AI
@@ -111,7 +104,7 @@ def analyze_audio_file(file_path):
         return None
 
     try:
-        # --- PARTEA 1: AI (Deep Learning - MusiCNN) ---
+        # - PARTEA 1: AI (Deep Learning - MusiCNN) -
         # 1. Încărcare Audio
         audio, sr = librosa.load(file_path, sr=None)  # Încărcăm tot fișierul pentru AI
 
@@ -147,11 +140,11 @@ def analyze_audio_file(file_path):
             # 6. Max Pooling
             ai_vector = np.max(probs, axis=0)
 
-        # --- PARTEA 2: CLASIC (Metoda Colegului) ---
-        # Aici apelăm funcția importată din dataset/extract.py
+        # - PARTEA 2: CLASIC -
+        # dataset/extract.py
         classic_vector = get_features_from_path(file_path)
 
-        # --- PARTEA 3: FUZIUNEA (Concatenare + Normalizare) ---
+        # - PARTEA 3: FUZIUNEA (Concatenare + Normalizare) -
 
         # Reshape pentru sklearn (vrea matrice 2D)
         ai_vector_2d = ai_vector.reshape(1, -1)
@@ -172,7 +165,7 @@ def analyze_audio_file(file_path):
         return None
 
 
-# --- MODELE PYDANTIC (Pentru API) ---
+# - MODELE PYDANTIC (Pentru API) -
 class LoginRequest(BaseModel):
     username: str
 
@@ -182,7 +175,7 @@ class PrefsRequest(BaseModel):
     songs: list[str]
 
 
-# --- ENDPOINTS NOI CU SQL ---
+# - ENDPOINTS NOI CU SQL -
 
 @app.post("/login")
 def login(request: LoginRequest, db: Session = Depends(get_db)):
@@ -238,9 +231,7 @@ def autocomplete(q: str, db: Session = Depends(get_db)):
 @app.post("/scan_library")
 def scan_library(db: Session = Depends(get_db)):
     # Importăm logica de analiză din contextul global sau funcția definită
-    # Nota: Trebuie să incluzi funcția analyze_audio_file completă în acest fișier
-    from ai.dataset import generate_melspectrogram  # Re-import pt siguranță
-
+    
     if not os.path.exists(AUDIO_LIBRARY_PATH):
         return {"error": "No audio folder"}
 
@@ -257,10 +248,7 @@ def scan_library(db: Session = Depends(get_db)):
                 print(f"🎵 Analizez: {song_name}...")
                 full_path = os.path.join(AUDIO_LIBRARY_PATH, file)
 
-                # AICI apelăm AI-ul 
-                # vector = analyze_audio_file(full_path)
-                # (Simulare vector pentru exemplul DB - tu decomentează analiza reală)
-                #vector = [0.1, 0.2, 0.3]  # Placeholder dacă nu merge analiza pe moment
+                # aici apelăm AI-ul 
                 try:
                     vector = analyze_audio_file(full_path)
                 except Exception as e:
@@ -290,7 +278,7 @@ def recommend(username: str, db: Session = Depends(get_db)):
     if not user or not user.preferences:
         return {"recommendations": []}
 
-    # --- HELPER: Amprenta Unică (Fingerprint) ---
+    # - HELPER: Amprenta Unică (Fingerprint) -
     def get_fingerprint(text):
         if not text: return ""
         # 1. Eliminăm conținutul din paranteze (ex: " (feat. X)", " [Live]")
@@ -309,7 +297,7 @@ def recommend(username: str, db: Session = Depends(get_db)):
     for pref in user.preferences:
         if pref.song:
             my_song_ids.add(pref.song.id)
-            # Salvăm amprenta completă a piesei tale (care include Artist + Titlu)
+            # Salvăm amprenta completă a piesei (artist + titlu)
             my_fingerprints.add(get_fingerprint(pref.song.title))
 
         try:
@@ -336,7 +324,7 @@ def recommend(username: str, db: Session = Depends(get_db)):
         # Calculăm amprenta candidatului
         candidate_fp = get_fingerprint(song.title)
         
-        # Dacă "artisttitlu" există deja în lista ta, e duplicat
+        # Dacă "artisttitlu" există deja în lista, e duplicat
         if candidate_fp in my_fingerprints:
             continue
 
@@ -359,7 +347,7 @@ def recommend(username: str, db: Session = Depends(get_db)):
 
     for song, score in candidates:
         # Nu vrem duplicate nici în lista de recomandări
-        # Ex: Să nu îți arate și "Metallica - One" și "Metallica - One (Live)" una lângă alta
+        # Ex: Să nu arate și "Metallica - One" și "Metallica - One (Live)" una lângă alta
         c_fp = get_fingerprint(song.title)
         if c_fp in seen_in_recs:
             continue
@@ -396,7 +384,7 @@ def recommend(username: str, db: Session = Depends(get_db)):
             
     return {"recommendations": final_recommendations}
 
-# --- ENDPOINT NOU: ANALIZĂ EXTERNĂ LIVE ---
+# - ENDPOINT NOU: ANALIZĂ EXTERNĂ LIVE -
 @app.get("/analyze_external")
 def analyze_external(q: str, username: str, db: Session = Depends(get_db)):
     """
@@ -436,7 +424,7 @@ def analyze_external(q: str, username: str, db: Session = Depends(get_db)):
             target_vector = analyze_audio_file(temp_path)
 
             if os.path.exists(temp_path):
-                os.remove(temp_path)  # Ștergem fișierul audio, păstrăm doar matematica
+                os.remove(temp_path)  # Ștergem fișierul audio
 
             if target_vector:
                 # SALVARE PERMANENTĂ ÎN BAZA DE DATE
@@ -471,7 +459,7 @@ def analyze_external(q: str, username: str, db: Session = Depends(get_db)):
     target_np = np.array(target_vector)
 
     for song in all_songs:
-        if song.id == song_in_db.id: continue  # Nu ne recomandăm pe noi înșine
+        if song.id == song_in_db.id: continue  
 
         song_vec = np.array(json.loads(song.vector_data))
         similarity = np.dot(target_np, song_vec) / (np.linalg.norm(target_np) * np.linalg.norm(song_vec))
@@ -485,7 +473,7 @@ def analyze_external(q: str, username: str, db: Session = Depends(get_db)):
         "added_to_library": True
     }
 
-# --- ENDPOINT NOU: ITUNES AUTOCOMPLETE ---
+# - ENDPOINT NOU: ITUNES AUTOCOMPLETE -
 @app.get("/itunes_autocomplete")
 def itunes_autocomplete(q: str):
     """
@@ -520,7 +508,7 @@ def itunes_autocomplete(q: str):
         return []
 
 
-# --- ENDPOINT ȘTERGERE PREFERINȚĂ ---
+# - ENDPOINT ȘTERGERE PREFERINȚĂ -
 @app.delete("/pref")
 def delete_pref(username: str, song: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
@@ -543,5 +531,5 @@ def delete_pref(username: str, song: str, db: Session = Depends(get_db)):
 
 if __name__ == "__main__":
     import uvicorn
-    # Asta ține programul deschis și ascultă cereri
+    # Tine programul deschis și ascultă cereri
     uvicorn.run(app, host="127.0.0.1", port=8000)
