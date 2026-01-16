@@ -112,7 +112,11 @@ if __name__ == "__main__":
                 continue
 
             print(f"  ⬇️  Descarc: {filename}")
-            if download_preview(song['previewUrl'], file_path):
+            # 1. Extragem URL-ul folosind .get() (returnează None dacă nu există, nu dă eroare)
+            preview_url = song.get('previewUrl')
+
+            # 2. Verificăm dacă am primit un URL valid înainte să descărcăm
+            if preview_url and download_preview(preview_url, file_path):
                 songs_downloaded += 1
 
             time.sleep(0.1)
